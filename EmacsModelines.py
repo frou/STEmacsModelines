@@ -15,6 +15,11 @@ import os
 MODELINE_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
 MODELINE_MAX_LINES = 5
 
+# TODO(DH): Remove ST2 codepath(s)
+# TODO(DH): Remove on_activated(...) handling, or put it behind a setting (default off)
+# TODO(DH): Do the init_syntax_files work at plugin load time.
+# TODO(DH): EventListener -> ViewEventListener ?
+# TODO(DH): Use ViewEventListener.is_applicable to reject views with 'is_widget' setting. Later, early-out for views not backed by a file (view.file_name()). See my 'skip-non-editor-views' branch for reference.
 
 def to_json_type(v):
     # from "https://github.com/SublimeText/Modelines/blob/master/sublime_modelines.py"
