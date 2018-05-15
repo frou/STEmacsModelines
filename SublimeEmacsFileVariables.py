@@ -100,7 +100,7 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
                 elif value.lower() == 'false':
                     value = False
 
-                self.set(key, value)
+                self.set_view_setting(key, value)
             elif key == "coding":
                 # http://www.gnu.org/software/emacs/manual/html_node/emacs/Coding-Systems.html
                 # http://www.gnu.org/software/emacs/manual/html_node/emacs/Specify-Coding.html
@@ -112,19 +112,19 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
                     value = "windows"
                 if value == "mac":
                     value = "CR"
-                self.set("line_endings", value)
+                self.set_view_setting("line_endings", value)
             elif key == "indent-tabs-mode":
                 if value == "nil" or value.strip == "0":
-                    self.set('translate_tabs_to_spaces', True)
+                    self.set_view_setting('translate_tabs_to_spaces', True)
                 else:
-                    self.set('translate_tabs_to_spaces', False)
+                    self.set_view_setting('translate_tabs_to_spaces', False)
             elif key == "mode":
                 if value in all_syntaxes:
-                    self.set('syntax', all_syntaxes[value])
+                    self.set_view_setting('syntax', all_syntaxes[value])
             elif key == "tab-width":
-                self.set('tab_size', int(value))
+                self.set_view_setting('tab_size', int(value))
 
-    def set(self, key, value):
+    def set_view_setting(self, key, value):
         view = self.view
         #print("%s: setting view setting '%s' to '%s'" % (self.__class__.__name__, key, value))
         if key == "line_endings":
