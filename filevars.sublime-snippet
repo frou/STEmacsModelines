@@ -1,6 +1,7 @@
 <snippet>
+    <!-- An example of 'coding' is `coding: utf-8-unix` but it's better to let editors autodetect text encoding -->
     <content><![CDATA[
-$TM_COMMENT_START-*- ${1:mode: ${2:bash}}${3:; indent-tabs-mode: ${4:nil}}${5:; tab-width: ${6:4}} -*- $TM_COMMENT_END
+$TM_COMMENT_START-*- ${1:mode: ${2:bash}}${3:; indent-tabs-mode: ${4:nil}}${5:; tab-width: ${6:4}}${7:; sublime-trim_trailing_white_space_on_save: ${8:false}} -*- $TM_COMMENT_END
 ]]></content>
     <tabTrigger>filevars</tabTrigger>
 </snippet>
