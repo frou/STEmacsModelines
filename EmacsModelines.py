@@ -50,12 +50,12 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
             yield f
 
     def on_load(self, view):
-        self.parse_modelines(view)
+        self.parse_filevars(view)
 
     def on_post_save(self, view):
-        self.parse_modelines(view)
+        self.parse_filevars(view)
 
-    def parse_modelines(self, view):
+    def parse_filevars(self, view):
         if not self._modes:
             self.init_syntax_files()
 
