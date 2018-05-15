@@ -114,7 +114,7 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
                     value = "CR"
                 self.set_view_setting("line_endings", value)
             elif key == "indent-tabs-mode":
-                if value == "nil" or value.strip == "0":
+                if value == "nil":
                     self.set_view_setting('translate_tabs_to_spaces', True)
                 else:
                     self.set_view_setting('translate_tabs_to_spaces', False)
