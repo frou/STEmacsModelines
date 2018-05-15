@@ -1,15 +1,11 @@
-# Support for Emacs-style in-band "File Variables".
-#
-# See:
-#   - http://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html
-#   - http://www.gnu.org/software/emacs/manual/html_node/emacs/Coding-Systems.html
-#   - http://www.gnu.org/software/emacs/manual/html_node/emacs/Specify-Coding.html
+# Support for Emacs-style in-band "File Variables"
 
 import sublime
 import sublime_plugin
 import re
 import os
 
+# http://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html
 FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
 FILEVARS_MAX_LINES = 5
 
@@ -94,6 +90,8 @@ class SublimeEmacsFileVariables(sublime_plugin.EventListener):
 
                     self.set(view, key, value)
                 elif key == "coding":
+                    # http://www.gnu.org/software/emacs/manual/html_node/emacs/Coding-Systems.html
+                    # http://www.gnu.org/software/emacs/manual/html_node/emacs/Specify-Coding.html
                     match = re.match('(?:.+-)?(unix|dos|mac)', value)
                     if not match:
                         continue
