@@ -108,13 +108,14 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
 
             # Split into options
             for opt in modeline.split(';'):
-                opts = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', opt)
-                if not opts:
+                keyValueMatch = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', opt)
+                if not keyValueMatch:
                     continue
 
-                key, value = opts.group(2), opts.group(3)
+                key, value = keyValueMatch.group(2), keyValueMatch.group(3)
+                keyIsSublimeSpecific = bool(keyValueMatch.group(1))
 
-                if opts.group(1):
+                if keyIsSublimeSpecific:
                     #print "settings().set(%s, %s)" % (key, value)
                     view.settings().set(key, to_json_type(value))
                 elif key == "coding":
