@@ -109,33 +109,34 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
             # Split into options
             for opt in modeline.split(';'):
                 opts = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', opt)
+                if not opts:
+                    continue
 
-                if opts:
-                    key, value = opts.group(2), opts.group(3)
+                key, value = opts.group(2), opts.group(3)
 
-                    if opts.group(1):
-                        #print "settings().set(%s, %s)" % (key, value)
-                        view.settings().set(key, to_json_type(value))
-                    elif key == "coding":
-                        match = re.match('(?:.+-)?(unix|dos|mac)', value)
-                        if not match:
-                            continue
-                        value = match.group(1)
-                        if value == "dos":
-                            value = "windows"
-                        if value == "mac":
-                            value = "CR"
-                        view.set_line_endings(value)
-                    elif key == "indent-tabs-mode":
-                        if value == "nil" or value.strip == "0":
-                            view.settings().set('translate_tabs_to_spaces', True)
-                        else:
-                            view.settings().set('translate_tabs_to_spaces', False)
-                    elif key == "mode":
-                        if value in self._modes:
-                            view.settings().set('syntax', self._modes[value])
-                    elif key == "tab-width":
-                        view.settings().set('tab_size', int(value))
+                if opts.group(1):
+                    #print "settings().set(%s, %s)" % (key, value)
+                    view.settings().set(key, to_json_type(value))
+                elif key == "coding":
+                    match = re.match('(?:.+-)?(unix|dos|mac)', value)
+                    if not match:
+                        continue
+                    value = match.group(1)
+                    if value == "dos":
+                        value = "windows"
+                    if value == "mac":
+                        value = "CR"
+                    view.set_line_endings(value)
+                elif key == "indent-tabs-mode":
+                    if value == "nil" or value.strip == "0":
+                        view.settings().set('translate_tabs_to_spaces', True)
+                    else:
+                        view.settings().set('translate_tabs_to_spaces', False)
+                elif key == "mode":
+                    if value in self._modes:
+                        view.settings().set('syntax', self._modes[value])
+                elif key == "tab-width":
+                    view.settings().set('tab_size', int(value))
 
             # We found a mode-line, so stop processing
             break
