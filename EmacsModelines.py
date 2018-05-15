@@ -116,7 +116,7 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
                 keyIsSublimeSpecific = bool(keyValueMatch.group(1))
 
                 if keyIsSublimeSpecific:
-                    #print "settings().set(%s, %s)" % (key, value)
+                    #print("%s: setting view setting '%s' to '%s'" % (self.__class__.__name__, key, value))
                     view.settings().set(key, to_json_type(value))
                 elif key == "coding":
                     match = re.match('(?:.+-)?(unix|dos|mac)', value)
