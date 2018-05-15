@@ -1,15 +1,16 @@
 # Support for Emacs-style in-band "File Variables"
+#
+# http://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html
 
 import sublime
 import sublime_plugin
 import re
 import os
 
-# http://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html
-FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
-
-# Inspect the first N lines of the file.
+# Look for the filevars line in the first N lines of the file only.
 FILEVARS_HEAD_LINE_COUNT = 5
+
+FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
 
 all_syntaxes = None
 
@@ -114,10 +115,10 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
                     value = "CR"
                 self.set_view_setting("line_endings", value)
             elif key == "indent-tabs-mode":
-                if value == "nil":
-                    self.set_view_setting('translate_tabs_to_spaces', True)
-                else:
-                    self.set_view_setting('translate_tabs_to_spaces', False)
+                # Convert string representations of Emacs Lisp values to proper Python booleans.
+                value = value.lower() != 'nil' and value.lower() != '()'
+
+                self.set_view_setting('translate_tabs_to_spaces', not value)
             elif key == "mode":
                 if value in all_syntaxes:
                     self.set_view_setting('syntax', all_syntaxes[value])
