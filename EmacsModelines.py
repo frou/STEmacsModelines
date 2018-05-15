@@ -15,11 +15,11 @@ import os
 MODELINE_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
 MODELINE_MAX_LINES = 5
 
-# TODO(DH): Remove ST2 codepath(s)
 # TODO(DH): Remove on_activated(...) handling, or put it behind a setting (default off)
-# TODO(DH): Do the init_syntax_files work at plugin load time.
+# TODO(DH): Do the init_syntax_files work at plugin load time, not on-demand.
 # TODO(DH): EventListener -> ViewEventListener ?
 # TODO(DH): Use ViewEventListener.is_applicable to reject views with 'is_widget' setting. Later, early-out for views not backed by a file (view.file_name()). See my 'skip-non-editor-views' branch for reference.
+# TODO(DH): Remove all references to "modeline" ... this is really about Emacs "File Variables", right?
 
 def to_json_type(v):
     # from "https://github.com/SublimeText/Modelines/blob/master/sublime_modelines.py"
@@ -58,19 +58,10 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
                 self._modes[modeline] = self._modes[syntax.lower()]
 
     def find_syntax_files(self):
-        # ST3
-        if hasattr(sublime, 'find_resources'):
-            for f in sublime.find_resources("*.tmLanguage"):
-                yield f
-            for f in sublime.find_resources("*.sublime-syntax"):
-                yield f
-        else:
-            for root, dirs, files in os.walk(sublime.packages_path()):
-                for f in files:
-                    if f.endswith(".tmLanguage") or f.endswith("*.sublime-syntax"):
-                        langfile = os.path.relpath(os.path.join(root, f), sublime.packages_path())
-                        # ST2 (as of build 2181) requires unix/MSYS style paths for the 'syntax' view setting
-                        yield os.path.join('Packages', langfile).replace("\\", "/")
+        for f in sublime.find_resources("*.tmLanguage"):
+            yield f
+        for f in sublime.find_resources("*.sublime-syntax"):
+            yield f
 
     def on_load(self, view):
         self.parse_modelines(view)
