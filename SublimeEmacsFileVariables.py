@@ -9,38 +9,45 @@ import os
 FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
 FILEVARS_MAX_LINES = 5
 
-# TODO(DH): Do the init_syntax_files work at plugin load time, not on-demand.
+all_syntaxes = {}
+
+def syntax_definition_paths():
+    for f in sublime.find_resources("*.tmLanguage"):
+        yield f
+    for f in sublime.find_resources("*.sublime-syntax"):
+        yield f
+
+def discover_syntaxes():
+    syntax_definition_paths = []
+    for p in sublime.find_resources("*.sublime-syntax"):
+        syntax_definition_paths.append(p)
+    for p in sublime.find_resources("*.tmLanguage"):
+        syntax_definition_paths.append(p)
+
+    for path in syntax_definition_paths:
+        mode = os.path.splitext(os.path.basename(path))[0].lower()
+        all_syntaxes[mode] = path
+
+    # Load custom mappings from the settings file
+    package_settings = sublime.load_settings("SublimeEmacsFileVariables.sublime-settings")
+
+    if package_settings.has("mode_mappings"):
+        for mode, syntax in package_settings.get("mode_mappings").items():
+            all_syntaxes[mode] = all_syntaxes[syntax.lower()]
+
+    if package_settings.has("user_mode_mappings"):
+        for mode, syntax in package_settings.get("user_mode_mappings").items():
+            all_syntaxes[mode] = all_syntaxes[syntax.lower()]
+
+discover_syntaxes()
+
+# ------------------------------------------------------------
 
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     @classmethod
     def is_applicable(cls, settings):
         # We don't want to be active in parts of Sublime's UI other than the actual code editor.
         return not settings.get('is_widget')
-
-    package_settings = None
-    modes = {}
-
-    def init_syntax_files(self):
-        for syntax_file in self.find_syntax_files():
-            name = os.path.splitext(os.path.basename(syntax_file))[0].lower()
-            self.modes[name] = syntax_file
-
-        # Load custom mappings from the settings file
-        self.package_settings = sublime.load_settings("SublimeEmacsFileVariables.sublime-settings")
-
-        if self.package_settings.has("mode_mappings"):
-            for mode, syntax in self.package_settings.get("mode_mappings").items():
-                self.modes[mode] = self.modes[syntax.lower()]
-
-        if self.package_settings.has("user_mode_mappings"):
-            for mode, syntax in self.package_settings.get("user_mode_mappings").items():
-                self.modes[mode] = self.modes[syntax.lower()]
-
-    def find_syntax_files(self):
-        for f in sublime.find_resources("*.tmLanguage"):
-            yield f
-        for f in sublime.find_resources("*.sublime-syntax"):
-            yield f
 
     def on_load(self):
         if self.view.file_name() == "":
@@ -53,9 +60,6 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         self.parse_filevars(self.view)
 
     def parse_filevars(self, view):
-        if not self.modes:
-            self.init_syntax_files()
-
         # Grab lines from beginning of view
         regionEnd = view.text_point(FILEVARS_MAX_LINES, 0)
         region = sublime.Region(0, regionEnd)
@@ -111,8 +115,8 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
                     else:
                         self.set(view, 'translate_tabs_to_spaces', False)
                 elif key == "mode":
-                    if value in self.modes:
-                        self.set(view, 'syntax', self.modes[value])
+                    if value in all_syntaxes:
+                        self.set(view, 'syntax', all_syntaxes[value])
                 elif key == "tab-width":
                     self.set(view, 'tab_size', int(value))
 
