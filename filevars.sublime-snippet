@@ -2,6 +2,5 @@
     <content><![CDATA[
 $TM_COMMENT_START-*- ${1:mode: ${2:bash}}${3:; tab-width: ${4:4}}${5:; indent-tabs-mode: ${6:t}} -*- $TM_COMMENT_END
 ]]></content>
-    <tabTrigger>-*-</tabTrigger>
-    <description>modeline</description>
+    <tabTrigger>filevars</tabTrigger>
 </snippet>
