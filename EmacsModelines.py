@@ -36,7 +36,7 @@ def to_json_type(v):
 
 class EmacsModelinesListener(sublime_plugin.EventListener):
 
-    settings = None
+    package_settings = None
 
     def __init__(self):
         self._modes = {}
@@ -47,14 +47,14 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
             self._modes[name] = syntax_file
 
         # Load custom mappings from the settings file
-        self.settings = sublime.load_settings("EmacsModelines.sublime-settings")
+        self.package_settings = sublime.load_settings("EmacsModelines.sublime-settings")
 
-        if self.settings.has("mode_mappings"):
-            for modeline, syntax in self.settings.get("mode_mappings").items():
+        if self.package_settings.has("mode_mappings"):
+            for modeline, syntax in self.package_settings.get("mode_mappings").items():
                 self._modes[modeline] = self._modes[syntax.lower()]
 
-        if self.settings.has("user_mode_mappings"):
-            for modeline, syntax in self.settings.get("user_mode_mappings").items():
+        if self.package_settings.has("user_mode_mappings"):
+            for modeline, syntax in self.package_settings.get("user_mode_mappings").items():
                 self._modes[modeline] = self._modes[syntax.lower()]
 
     def find_syntax_files(self):
