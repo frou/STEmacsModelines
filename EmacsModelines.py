@@ -1,26 +1,23 @@
-# Emacs-like modeline parser
+# Support for Emacs-style in-band "File Variables".
 #
-# Parses any '-*- ... -*-'-style modeline within the first 5 lines of a
-# view, and sets a few variables.
-
-# URLref: [Emacs - Specifying File Variables] http://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html @@ http://www.webcitation.org/66xWWwjTt
-# URLref: [Emacs - Coding Systems] http://www.gnu.org/software/emacs/manual/html_node/emacs/Coding-Systems.html @@ http://www.webcitation.org/66xX3pMc1
-# URLref: [Emacs - Specifying a File's Coding System] http://www.gnu.org/software/emacs/manual/html_node/emacs/Specify-Coding.html @@ http://www.webcitation.org/66xZ1nDWp
+# See:
+#   - http://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html
+#   - http://www.gnu.org/software/emacs/manual/html_node/emacs/Coding-Systems.html
+#   - http://www.gnu.org/software/emacs/manual/html_node/emacs/Specify-Coding.html
 
 import sublime
 import sublime_plugin
 import re
 import os
 
-MODELINE_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
-MODELINE_MAX_LINES = 5
+FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
+FILEVARS_MAX_LINES = 5
 
 # TODO(DH): Do the init_syntax_files work at plugin load time, not on-demand.
 # TODO(DH): EventListener -> ViewEventListener ?
 # TODO(DH): Use ViewEventListener.is_applicable to reject views with 'is_widget' setting. Later, early-out for views not backed by a file (view.file_name()). See my 'skip-non-editor-views' branch for reference.
-# TODO(DH): Remove all references to "modeline" ... this is really about Emacs "File Variables", right?
 
-class EmacsModelinesListener(sublime_plugin.EventListener):
+class SublimeEmacsFileVariables(sublime_plugin.EventListener):
 
     package_settings = None
 
@@ -33,15 +30,15 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
             self._modes[name] = syntax_file
 
         # Load custom mappings from the settings file
-        self.package_settings = sublime.load_settings("EmacsModelines.sublime-settings")
+        self.package_settings = sublime.load_settings("EmacsFileVariables.sublime-settings")
 
         if self.package_settings.has("mode_mappings"):
-            for modeline, syntax in self.package_settings.get("mode_mappings").items():
-                self._modes[modeline] = self._modes[syntax.lower()]
+            for mode, syntax in self.package_settings.get("mode_mappings").items():
+                self._modes[mode] = self._modes[syntax.lower()]
 
         if self.package_settings.has("user_mode_mappings"):
-            for modeline, syntax in self.package_settings.get("user_mode_mappings").items():
-                self._modes[modeline] = self._modes[syntax.lower()]
+            for mode, syntax in self.package_settings.get("user_mode_mappings").items():
+                self._modes[mode] = self._modes[syntax.lower()]
 
     def find_syntax_files(self):
         for f in sublime.find_resources("*.tmLanguage"):
@@ -60,27 +57,27 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
             self.init_syntax_files()
 
         # Grab lines from beginning of view
-        regionEnd = view.text_point(MODELINE_MAX_LINES, 0)
+        regionEnd = view.text_point(FILEVARS_MAX_LINES, 0)
         region = sublime.Region(0, regionEnd)
         lines = view.lines(region)
         # Get the last line in the file
         line = view.line(view.size())
         # Add the last N lines of the file to the lines list
-        for i in range(1, MODELINE_MAX_LINES):
+        for i in range(1, FILEVARS_MAX_LINES):
             # Add the line to the list of lines
             lines.append(line)
             # Move the line to the previous line
             line = view.line(line.a - 1)
 
-        # Look for modeline regexp
+        # Look for filevars
         for line in lines:
-            m = re.match(MODELINE_RE, view.substr(line))
+            m = re.match(FILEVARS_RE, view.substr(line))
             if not m:
                 continue
 
-            modeline = m.group(1).lower()
+            filevars = m.group(1).lower()
 
-            for component in modeline.split(';'):
+            for component in filevars.split(';'):
                 keyValueMatch = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', component)
                 if not keyValueMatch:
                     continue
@@ -117,7 +114,7 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
                 elif key == "tab-width":
                     self.set(view, 'tab_size', int(value))
 
-            # We found a mode-line, so stop processing
+            # We found and processed a filevars line, so do not look for more.
             break
 
     def set(self, view, key, value):

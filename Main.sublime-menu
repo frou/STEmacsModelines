@@ -12,17 +12,17 @@
                 "children":
                 [
                     {
-                        "caption": "Emacs Modelines",
+                        "caption": "SublimeEmacsFileVariables",
                         "children":
                         [
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/Emacs-like Modelines/EmacsModelines.sublime-settings"},
+                                "args": {"file": "${packages}/SublimeEmacsFileVariables/SublimeEmacsFileVariables.sublime-settings"},
                                 "caption": "Settings – Default"
                             },
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/User/EmacsModelines.sublime-settings"},
+                                "args": {"file": "${packages}/User/SublimeEmacsFileVariables.sublime-settings"},
                                 "caption": "Settings – User"
                             }
                         ]
