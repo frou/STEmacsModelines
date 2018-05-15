@@ -136,10 +136,6 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
                             view.settings().set('syntax', self._modes[value])
                     elif key == "tab-width":
                         view.settings().set('tab_size', int(value))
-                else:
-                    # Not a 'key: value'-pair - assume it's a syntax-name
-                    if opt.strip() in self._modes:
-                        view.settings().set('syntax', self._modes[opt.strip()])
 
             # We found a mode-line, so stop processing
             break
