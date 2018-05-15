@@ -62,9 +62,9 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         self.act()
 
     def act(self):
-        match = self.parse_filevars()
-        if match:
-            self.process_filevars(match)
+        filevars = self.parse_filevars()
+        if filevars:
+            self.process_filevars(filevars)
 
     def parse_filevars(self):
         view = self.view
@@ -78,15 +78,13 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         for line in lines:
             m = re.match(FILEVARS_RE, view.substr(line))
             if m:
-                return m
+                return m.group(1)
         return None
 
-    def process_filevars(self, match):
+    def process_filevars(self, filevars):
         global all_syntaxes
 
-        filevars = match.group(1).lower()
-
-        for component in filevars.split(';'):
+        for component in filevars.lower().split(';'):
             keyValueMatch = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', component)
             if not keyValueMatch:
                 continue
