@@ -7,7 +7,9 @@ import os
 
 # http://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html
 FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
-FILEVARS_HEAD_TAIL_LINE_COUNTS = 5
+
+# Inspect the first N lines of the file.
+FILEVARS_HEAD_LINE_COUNT = 5
 
 all_syntaxes = {}
 
@@ -67,19 +69,9 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         view = self.view
 
         # Grab lines from beginning of view
-        regionEnd = view.text_point(FILEVARS_HEAD_TAIL_LINE_COUNTS, 0)
+        regionEnd = view.text_point(FILEVARS_HEAD_LINE_COUNT, 0)
         region = sublime.Region(0, regionEnd)
         lines = view.lines(region)
-        # Get the last line in the file
-        line = view.line(view.size())
-
-        # TODO(DH): Remove the tail lines things.
-        # Add the last N lines of the file to the lines list
-        for i in range(1, FILEVARS_HEAD_TAIL_LINE_COUNTS):
-            # Add the line to the list of lines
-            lines.append(line)
-            # Move the line to the previous line
-            line = view.line(line.a - 1)
 
         # Look for filevars
         for line in lines:
