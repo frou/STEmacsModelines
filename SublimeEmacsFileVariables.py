@@ -13,12 +13,6 @@ FILEVARS_HEAD_LINE_COUNT = 5
 
 all_syntaxes = {}
 
-def syntax_definition_paths():
-    for f in sublime.find_resources("*.tmLanguage"):
-        yield f
-    for f in sublime.find_resources("*.sublime-syntax"):
-        yield f
-
 def discover_syntaxes():
     syntax_definition_paths = []
     for p in sublime.find_resources("*.sublime-syntax"):
