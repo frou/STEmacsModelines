@@ -53,11 +53,15 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         if self.view.file_name() == "":
             # We only care about views representing actual files on disk.
             return
-
-        self.parse_filevars()
+        self.act()
 
     def on_post_save(self):
-        self.parse_filevars()
+        self.act()
+
+    def act(self):
+        match = self.parse_filevars()
+        if match:
+            self.process_filevars(match)
 
     def parse_filevars(self):
         view = self.view
@@ -68,6 +72,8 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         lines = view.lines(region)
         # Get the last line in the file
         line = view.line(view.size())
+
+        # TODO(DH): Remove the tail lines things.
         # Add the last N lines of the file to the lines list
         for i in range(1, FILEVARS_HEAD_TAIL_LINE_COUNTS):
             # Add the line to the list of lines
@@ -78,52 +84,51 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         # Look for filevars
         for line in lines:
             m = re.match(FILEVARS_RE, view.substr(line))
-            if not m:
+            if m:
+                return m
+        return None
+
+    def process_filevars(self, match):
+        filevars = match.group(1).lower()
+
+        for component in filevars.split(';'):
+            keyValueMatch = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', component)
+            if not keyValueMatch:
                 continue
 
-            filevars = m.group(1).lower()
+            key, value = keyValueMatch.group(2), keyValueMatch.group(3)
+            keyIsSublimeSpecific = bool(keyValueMatch.group(1))
 
-            for component in filevars.split(';'):
-                keyValueMatch = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', component)
-                if not keyValueMatch:
+            if keyIsSublimeSpecific:
+                # Convert stringly-typed booleans to proper Python booleans.
+                if value.lower() == 'true':
+                    value = True
+                elif value.lower() == 'false':
+                    value = False
+
+                self.set(key, value)
+            elif key == "coding":
+                # http://www.gnu.org/software/emacs/manual/html_node/emacs/Coding-Systems.html
+                # http://www.gnu.org/software/emacs/manual/html_node/emacs/Specify-Coding.html
+                match = re.match('(?:.+-)?(unix|dos|mac)', value)
+                if not match:
                     continue
-
-                key, value = keyValueMatch.group(2), keyValueMatch.group(3)
-                keyIsSublimeSpecific = bool(keyValueMatch.group(1))
-
-                if keyIsSublimeSpecific:
-                    # Convert stringly-typed booleans to proper Python booleans.
-                    if value.lower() == 'true':
-                        value = True
-                    elif value.lower() == 'false':
-                        value = False
-
-                    self.set(key, value)
-                elif key == "coding":
-                    # http://www.gnu.org/software/emacs/manual/html_node/emacs/Coding-Systems.html
-                    # http://www.gnu.org/software/emacs/manual/html_node/emacs/Specify-Coding.html
-                    match = re.match('(?:.+-)?(unix|dos|mac)', value)
-                    if not match:
-                        continue
-                    value = match.group(1)
-                    if value == "dos":
-                        value = "windows"
-                    if value == "mac":
-                        value = "CR"
-                    self.set("line_endings", value)
-                elif key == "indent-tabs-mode":
-                    if value == "nil" or value.strip == "0":
-                        self.set('translate_tabs_to_spaces', True)
-                    else:
-                        self.set('translate_tabs_to_spaces', False)
-                elif key == "mode":
-                    if value in all_syntaxes:
-                        self.set('syntax', all_syntaxes[value])
-                elif key == "tab-width":
-                    self.set('tab_size', int(value))
-
-            # We found and processed a filevars line, so do not look for more.
-            break
+                value = match.group(1)
+                if value == "dos":
+                    value = "windows"
+                if value == "mac":
+                    value = "CR"
+                self.set("line_endings", value)
+            elif key == "indent-tabs-mode":
+                if value == "nil" or value.strip == "0":
+                    self.set('translate_tabs_to_spaces', True)
+                else:
+                    self.set('translate_tabs_to_spaces', False)
+            elif key == "mode":
+                if value in all_syntaxes:
+                    self.set('syntax', all_syntaxes[value])
+            elif key == "tab-width":
+                self.set('tab_size', int(value))
 
     def set(self, key, value):
         view = self.view
