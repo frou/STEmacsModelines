@@ -26,7 +26,7 @@ class SublimeEmacsFileVariables(sublime_plugin.EventListener):
             self._modes[name] = syntax_file
 
         # Load custom mappings from the settings file
-        self.package_settings = sublime.load_settings("EmacsFileVariables.sublime-settings")
+        self.package_settings = sublime.load_settings("SublimeEmacsFileVariables.sublime-settings")
 
         if self.package_settings.has("mode_mappings"):
             for mode, syntax in self.package_settings.get("mode_mappings").items():
