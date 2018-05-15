@@ -11,39 +11,45 @@ FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
 # Inspect the first N lines of the file.
 FILEVARS_HEAD_LINE_COUNT = 5
 
-all_syntaxes = {}
-
-def discover_syntaxes():
-    syntax_definition_paths = []
-    for p in sublime.find_resources("*.sublime-syntax"):
-        syntax_definition_paths.append(p)
-    for p in sublime.find_resources("*.tmLanguage"):
-        syntax_definition_paths.append(p)
-
-    for path in syntax_definition_paths:
-        mode = os.path.splitext(os.path.basename(path))[0].lower()
-        all_syntaxes[mode] = path
-
-    # Load custom mappings from the settings file
-    package_settings = sublime.load_settings("SublimeEmacsFileVariables.sublime-settings")
-
-    if package_settings.has("mode_mappings"):
-        for mode, syntax in package_settings.get("mode_mappings").items():
-            all_syntaxes[mode] = all_syntaxes[syntax.lower()]
-
-    if package_settings.has("user_mode_mappings"):
-        for mode, syntax in package_settings.get("user_mode_mappings").items():
-            all_syntaxes[mode] = all_syntaxes[syntax.lower()]
-
-discover_syntaxes()
-
-# ------------------------------------------------------------
+all_syntaxes = None
 
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     @classmethod
     def is_applicable(cls, settings):
         # We don't want to be active in parts of Sublime's UI other than the actual code editor.
         return not settings.get('is_widget')
+
+    def __init__(self, view):
+        self.view = view
+
+        global all_syntaxes
+        if all_syntaxes:
+            return
+        else:
+            all_syntaxes = {}
+
+        syntax_definition_paths = []
+        for p in sublime.find_resources("*.sublime-syntax"):
+            syntax_definition_paths.append(p)
+        for p in sublime.find_resources("*.tmLanguage"):
+            syntax_definition_paths.append(p)
+
+        for path in syntax_definition_paths:
+            mode = os.path.splitext(os.path.basename(path))[0].lower()
+            all_syntaxes[mode] = path
+
+        # Load custom mappings from the settings file
+        package_settings = sublime.load_settings("SublimeEmacsFileVariables.sublime-settings")
+
+        if package_settings.has("mode_mappings"):
+            for mode, syntax in package_settings.get("mode_mappings").items():
+                all_syntaxes[mode] = all_syntaxes[syntax.lower()]
+
+        if package_settings.has("user_mode_mappings"):
+            for mode, syntax in package_settings.get("user_mode_mappings").items():
+                all_syntaxes[mode] = all_syntaxes[syntax.lower()]
+
+        #print(all_syntaxes)
 
     def on_load(self):
         if self.view.file_name() == "":
@@ -75,6 +81,8 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         return None
 
     def process_filevars(self, match):
+        global all_syntaxes
+
         filevars = match.group(1).lower()
 
         for component in filevars.split(';'):
