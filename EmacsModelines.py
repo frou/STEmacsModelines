@@ -21,19 +21,6 @@ MODELINE_MAX_LINES = 5
 # TODO(DH): Use ViewEventListener.is_applicable to reject views with 'is_widget' setting. Later, early-out for views not backed by a file (view.file_name()). See my 'skip-non-editor-views' branch for reference.
 # TODO(DH): Remove all references to "modeline" ... this is really about Emacs "File Variables", right?
 
-def to_json_type(v):
-    # from "https://github.com/SublimeText/Modelines/blob/master/sublime_modelines.py"
-    """"Convert string value to proper JSON type.
-    """
-    if v.lower() in ('true', 'false'):
-        v = v[0].upper() + v[1:].lower()
-
-    try:
-        return eval(v, {}, {})
-    except:
-        raise ValueError("Could not convert to JSON type.")
-
-
 class EmacsModelinesListener(sublime_plugin.EventListener):
 
     package_settings = None
@@ -106,7 +93,13 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
                 keyIsSublimeSpecific = bool(keyValueMatch.group(1))
 
                 if keyIsSublimeSpecific:
-                    self.set(view, key, to_json_type(value))
+                    # Convert stringly-typed booleans to proper Python booleans.
+                    if value.lower() == 'true':
+                        value = True
+                    elif value.lower() == 'false':
+                        value = False
+
+                    self.set(view, key, value)
                 elif key == "coding":
                     match = re.match('(?:.+-)?(unix|dos|mac)', value)
                     if not match:
