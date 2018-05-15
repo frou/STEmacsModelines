@@ -106,9 +106,8 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
 
             modeline = m.group(1).lower()
 
-            # Split into options
-            for opt in modeline.split(';'):
-                keyValueMatch = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', opt)
+            for component in modeline.split(';'):
+                keyValueMatch = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', component)
                 if not keyValueMatch:
                     continue
 
