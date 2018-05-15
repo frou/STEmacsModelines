@@ -115,8 +115,7 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
                 keyIsSublimeSpecific = bool(keyValueMatch.group(1))
 
                 if keyIsSublimeSpecific:
-                    #print("%s: setting view setting '%s' to '%s'" % (self.__class__.__name__, key, value))
-                    view.settings().set(key, to_json_type(value))
+                    self.set(view, key, to_json_type(value))
                 elif key == "coding":
                     match = re.match('(?:.+-)?(unix|dos|mac)', value)
                     if not match:
@@ -126,17 +125,24 @@ class EmacsModelinesListener(sublime_plugin.EventListener):
                         value = "windows"
                     if value == "mac":
                         value = "CR"
-                    view.set_line_endings(value)
+                    self.set(view, "line_endings", value)
                 elif key == "indent-tabs-mode":
                     if value == "nil" or value.strip == "0":
-                        view.settings().set('translate_tabs_to_spaces', True)
+                        self.set(view, 'translate_tabs_to_spaces', True)
                     else:
-                        view.settings().set('translate_tabs_to_spaces', False)
+                        self.set(view, 'translate_tabs_to_spaces', False)
                 elif key == "mode":
                     if value in self._modes:
-                        view.settings().set('syntax', self._modes[value])
+                        self.set(view, 'syntax', self._modes[value])
                 elif key == "tab-width":
-                    view.settings().set('tab_size', int(value))
+                    self.set(view, 'tab_size', int(value))
 
             # We found a mode-line, so stop processing
             break
+
+    def set(self, view, key, value):
+        #print("%s: setting view setting '%s' to '%s'" % (self.__class__.__name__, key, value))
+        if key == "line_endings":
+            view.set_line_endings(value)
+        else:
+            view.settings().set(key, value)
