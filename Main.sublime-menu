@@ -17,7 +17,7 @@
                         [
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/SublimeEmacsFileVariables/SublimeEmacsFileVariables.sublime-settings"},
+                                "args": {"file": "${packages}/STEmacsModelines/SublimeEmacsFileVariables.sublime-settings"},
                                 "caption": "Settings – Default"
                             },
                             {
