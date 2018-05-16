@@ -12,7 +12,7 @@ FILEVARS_HEAD_LINE_COUNT = 5
 
 FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
 
-all_syntaxes = None
+modeToSyntaxLUT = None
 
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     @classmethod
@@ -23,11 +23,11 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     def __init__(self, view):
         self.view = view
 
-        global all_syntaxes
-        if all_syntaxes:
+        global modeToSyntaxLUT
+        if modeToSyntaxLUT:
             return
         else:
-            all_syntaxes = {}
+            modeToSyntaxLUT = {}
 
         syntax_definition_paths = []
         for p in sublime.find_resources("*.sublime-syntax"):
@@ -37,20 +37,20 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
         for path in syntax_definition_paths:
             mode = os.path.splitext(os.path.basename(path))[0].lower()
-            all_syntaxes[mode] = path
+            modeToSyntaxLUT[mode] = path
 
         # Load custom mappings from the settings file
         package_settings = sublime.load_settings("SublimeEmacsFileVariables.sublime-settings")
 
         if package_settings.has("mode_mappings"):
             for mode, syntax in package_settings.get("mode_mappings").items():
-                all_syntaxes[mode] = all_syntaxes[syntax.lower()]
+                modeToSyntaxLUT[mode] = modeToSyntaxLUT[syntax.lower()]
 
         if package_settings.has("user_mode_mappings"):
             for mode, syntax in package_settings.get("user_mode_mappings").items():
-                all_syntaxes[mode] = all_syntaxes[syntax.lower()]
+                modeToSyntaxLUT[mode] = modeToSyntaxLUT[syntax.lower()]
 
-        #print(all_syntaxes)
+        #print(modeToSyntaxLUT)
 
     def on_load(self):
         if self.view.file_name() == "":
@@ -82,7 +82,7 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         return None
 
     def process_filevars(self, filevars):
-        global all_syntaxes
+        global modeToSyntaxLUT
 
         for component in filevars.lower().split(';'):
             keyValueMatch = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', component)
@@ -118,8 +118,8 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
                 self.set_view_setting('translate_tabs_to_spaces', not value)
             elif key == "mode":
-                if value in all_syntaxes:
-                    self.set_view_setting('syntax', all_syntaxes[value])
+                if value in modeToSyntaxLUT:
+                    self.set_view_setting('syntax', modeToSyntaxLUT[value])
             elif key == "tab-width":
                 self.set_view_setting('tab_size', int(value))
 
