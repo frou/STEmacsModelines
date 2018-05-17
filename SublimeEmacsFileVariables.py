@@ -14,20 +14,16 @@ FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
 
 modeToSyntaxLUT = None
 
+
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     @classmethod
     def is_applicable(cls, settings):
         # We don't want to be active in parts of Sublime's UI other than the actual code editor.
         return not settings.get('is_widget')
 
-    def __init__(self, view):
-        self.view = view
-
+    def discover_package_syntaxes(self):
         global modeToSyntaxLUT
-        if modeToSyntaxLUT:
-            return
-        else:
-            modeToSyntaxLUT = {}
+        modeToSyntaxLUT = {}
 
         syntax_definition_paths = []
         for p in sublime.find_resources("*.sublime-syntax"):
@@ -40,28 +36,38 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
             modeToSyntaxLUT[mode] = path
 
         # Load custom mappings from the settings file
-        package_settings = sublime.load_settings("SublimeEmacsFileVariables.sublime-settings")
+        package_settings = sublime.load_settings(
+            "SublimeEmacsFileVariables.sublime-settings")
 
         if package_settings.has("mode_mappings"):
             for mode, syntax in package_settings.get("mode_mappings").items():
                 modeToSyntaxLUT[mode] = modeToSyntaxLUT[syntax.lower()]
 
         if package_settings.has("user_mode_mappings"):
-            for mode, syntax in package_settings.get("user_mode_mappings").items():
+            for mode, syntax in package_settings.get(
+                    "user_mode_mappings").items():
                 modeToSyntaxLUT[mode] = modeToSyntaxLUT[syntax.lower()]
 
         #print(modeToSyntaxLUT)
 
     def on_load(self):
-        if self.view.file_name() == "":
-            # We only care about views representing actual files on disk.
-            return
+        self.act()
+
+    def on_activated(self):
         self.act()
 
     def on_post_save(self):
         self.act()
 
     def act(self):
+        # We only care about views representing actual files on disk.
+        if not self.view.file_name() or self.view.is_scratch():
+            return
+
+        global modeToSyntaxLUT
+        if not modeToSyntaxLUT:
+            self.discover_package_syntaxes()
+
         filevars = self.parse_filevars()
         if filevars:
             self.process_filevars(filevars)
@@ -85,7 +91,9 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         global modeToSyntaxLUT
 
         for component in filevars.lower().split(';'):
-            keyValueMatch = re.match(r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*', component)
+            keyValueMatch = re.match(
+                r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*',
+                component)
             if not keyValueMatch:
                 continue
 
