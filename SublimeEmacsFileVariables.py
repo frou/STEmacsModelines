@@ -21,6 +21,30 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         # We don't want to be active in parts of Sublime's UI other than the actual code editor.
         return not settings.get('is_widget')
 
+    def on_load(self):
+        self.act()
+
+    def on_activated(self):
+        self.act()
+
+    def on_post_save(self):
+        self.act()
+
+    # ------------------------------------------------------------
+
+    def act(self):
+        # We only care about views representing actual files on disk.
+        if not self.view.file_name() or self.view.is_scratch():
+            return
+
+        global modeToSyntaxLUT
+        if not modeToSyntaxLUT:
+            self.discover_package_syntaxes()
+
+        filevars = self.parse_filevars()
+        if filevars:
+            self.process_filevars(filevars)
+
     def discover_package_syntaxes(self):
         global modeToSyntaxLUT
         modeToSyntaxLUT = {}
@@ -49,28 +73,6 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
                 modeToSyntaxLUT[mode] = modeToSyntaxLUT[syntax.lower()]
 
         #print(modeToSyntaxLUT)
-
-    def on_load(self):
-        self.act()
-
-    def on_activated(self):
-        self.act()
-
-    def on_post_save(self):
-        self.act()
-
-    def act(self):
-        # We only care about views representing actual files on disk.
-        if not self.view.file_name() or self.view.is_scratch():
-            return
-
-        global modeToSyntaxLUT
-        if not modeToSyntaxLUT:
-            self.discover_package_syntaxes()
-
-        filevars = self.parse_filevars()
-        if filevars:
-            self.process_filevars(filevars)
 
     def parse_filevars(self):
         view = self.view
