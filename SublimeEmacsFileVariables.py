@@ -1,7 +1,3 @@
-# Support for Emacs-style in-band "File Variables"
-#
-# http://www.gnu.org/software/emacs/manual/html_node/emacs/Specifying-File-Variables.html
-
 import sublime
 import sublime_plugin
 import re
