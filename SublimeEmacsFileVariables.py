@@ -126,6 +126,9 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
             elif key == "mode":
                 if value in modeToSyntaxLUT:
                     self.set_view_setting('syntax', modeToSyntaxLUT[value])
+                else:
+                    sublime.status_message(
+                        '%s: %s "%s" does not match any known syntax' % (self.__class__.__name__, key, value))
             elif key == "tab-width":
                 self.set_view_setting('tab_size', int(value))
 
