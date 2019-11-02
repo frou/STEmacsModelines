@@ -6,17 +6,18 @@ import os
 # Look for the filevars line in the first N lines of the file only.
 FILEVARS_HEAD_LINE_COUNT = 5
 
-FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
+FILEVARS_RE = r".*-\*-\s*(.+?)\s*-\*-.*"
 
 modeToSyntaxLUT = None
 
 # REF: https://forum.sublimetext.com/t/api-how-to-tell-whether-a-view-object-represents-an-unusual-view/36756
 
+
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     @classmethod
     def is_applicable(cls, settings):
         # We don't want to be active in parts of Sublime's UI other than the actual code editor.
-        return not settings.get('is_widget')
+        return not settings.get("is_widget")
 
     def on_load(self):
         self.act()
@@ -58,18 +59,18 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
         # Load custom mappings from the settings file
         package_settings = sublime.load_settings(
-            "SublimeEmacsFileVariables.sublime-settings")
+            "SublimeEmacsFileVariables.sublime-settings"
+        )
 
         if package_settings.has("mode_mappings"):
             for mode, syntax in package_settings.get("mode_mappings").items():
                 modeToSyntaxLUT[mode] = modeToSyntaxLUT[syntax.lower()]
 
         if package_settings.has("user_mode_mappings"):
-            for mode, syntax in package_settings.get(
-                    "user_mode_mappings").items():
+            for mode, syntax in package_settings.get("user_mode_mappings").items():
                 modeToSyntaxLUT[mode] = modeToSyntaxLUT[syntax.lower()]
 
-        #print(modeToSyntaxLUT)
+        # print(modeToSyntaxLUT)
 
     def parse_filevars(self):
         view = self.view
@@ -89,10 +90,11 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     def process_filevars(self, filevars):
         global modeToSyntaxLUT
 
-        for component in filevars.lower().split(';'):
+        for component in filevars.lower().split(";"):
             keyValueMatch = re.match(
-                r'\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*',
-                component)
+                r"\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*",
+                component,
+            )
             if not keyValueMatch:
                 continue
 
@@ -101,16 +103,16 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
             if keyIsSublimeSpecific:
                 # Convert stringly-typed booleans to proper Python booleans.
-                if value.lower() == 'true':
+                if value.lower() == "true":
                     value = True
-                elif value.lower() == 'false':
+                elif value.lower() == "false":
                     value = False
 
                 self.set_view_setting(key, value)
             elif key == "coding":
                 # http://www.gnu.org/software/emacs/manual/html_node/emacs/Coding-Systems.html
                 # http://www.gnu.org/software/emacs/manual/html_node/emacs/Specify-Coding.html
-                match = re.match('(?:.+-)?(unix|dos|mac)', value)
+                match = re.match("(?:.+-)?(unix|dos|mac)", value)
                 if not match:
                     continue
                 value = match.group(1)
@@ -121,21 +123,23 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
                 self.set_view_setting("line_endings", value)
             elif key == "indent-tabs-mode":
                 # Convert string representations of Emacs Lisp values to proper Python booleans.
-                value = value.lower() != 'nil' and value.lower() != '()'
+                value = value.lower() != "nil" and value.lower() != "()"
 
-                self.set_view_setting('translate_tabs_to_spaces', not value)
+                self.set_view_setting("translate_tabs_to_spaces", not value)
             elif key == "mode":
                 if value in modeToSyntaxLUT:
-                    self.set_view_setting('syntax', modeToSyntaxLUT[value])
+                    self.set_view_setting("syntax", modeToSyntaxLUT[value])
                 else:
                     sublime.status_message(
-                        '%s: %s "%s" does not match any known syntax' % (self.__class__.__name__, key, value))
+                        '%s: %s "%s" does not match any known syntax'
+                        % (self.__class__.__name__, key, value)
+                    )
             elif key == "tab-width":
-                self.set_view_setting('tab_size', int(value))
+                self.set_view_setting("tab_size", int(value))
 
     def set_view_setting(self, key, value):
         view = self.view
-        #print("%s: setting view setting '%s' to '%s'" % (self.__class__.__name__, key, value))
+        # print("%s: setting view setting '%s' to '%s'" % (self.__class__.__name__, key, value))
         if key == "line_endings":
             view.set_line_endings(value)
         else:
