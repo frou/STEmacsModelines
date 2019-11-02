@@ -10,6 +10,7 @@ FILEVARS_RE = r'.*-\*-\s*(.+?)\s*-\*-.*'
 
 modeToSyntaxLUT = None
 
+# REF: https://forum.sublimetext.com/t/api-how-to-tell-whether-a-view-object-represents-an-unusual-view/36756
 
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     @classmethod
