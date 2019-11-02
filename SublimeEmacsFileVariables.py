@@ -10,26 +10,8 @@ FILEVARS_RE = r".*-\*-\s*(.+?)\s*-\*-.*"
 
 mode_to_syntax_lut = None
 
-# REF: https://forum.sublimetext.com/t/api-how-to-tell-whether-a-view-object-represents-an-unusual-view/36756
-
 
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
-    @classmethod
-    def is_applicable(cls, settings):
-        # We don't want to be active in parts of Sublime's UI other than the actual code editor.
-        return not settings.get("is_widget")
-
-    def on_load(self):
-        self.act()
-
-    def on_activated(self):
-        self.act()
-
-    def on_post_save(self):
-        self.act()
-
-    # ------------------------------------------------------------
-
     def act(self):
         # We only care about views representing actual files on disk.
         if not self.view.file_name() or self.view.is_scratch():
@@ -145,3 +127,20 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
             view.set_line_endings(value)
         else:
             view.settings().set(key, value)
+
+    # Overrides________________________________________________________________
+
+    @classmethod
+    def is_applicable(cls, settings):
+        # We don't want to be active in parts of Sublime's UI other than the actual code editor.
+        # REF: https://forum.sublimetext.com/t/api-how-to-tell-whether-a-view-object-represents-an-unusual-view/36756
+        return not settings.get("is_widget")
+
+    def on_load(self):
+        self.act()
+
+    def on_activated(self):
+        self.act()
+
+    def on_post_save(self):
+        self.act()
