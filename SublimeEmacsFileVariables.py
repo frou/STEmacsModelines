@@ -128,7 +128,7 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         else:
             view.settings().set(key, value)
 
-    # Overrides________________________________________________________________
+    # Overrides --------------------------------------------------
 
     @classmethod
     def is_applicable(cls, settings):
