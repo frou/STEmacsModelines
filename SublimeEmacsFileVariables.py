@@ -1,7 +1,8 @@
+import os
+import re
+
 import sublime
 import sublime_plugin
-import re
-import os
 
 # Look for the filevars line in the first N lines of the file only.
 FILEVARS_HEAD_LINE_COUNT = 5
@@ -129,6 +130,9 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
             view.settings().set(key, value)
 
     # Overrides --------------------------------------------------
+
+    # @todo #0 Once on ST4, the is_widget approach will not be able to prevent this plugin applying to Output panels.
+    #  Use the new API instead: https://github.com/sublimehq/sublime_text/issues/3167#issuecomment-572685088
 
     @classmethod
     def is_applicable(cls, settings):
