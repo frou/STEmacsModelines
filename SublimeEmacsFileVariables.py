@@ -11,6 +11,8 @@ FILEVARS_RE = r".*-\*-\s*(.+?)\s*-\*-.*"
 
 mode_to_syntax_lut = None
 
+# @todo #0 Remove this GitHub repo (my fork of the original) from STEmacsModelines to STEmacsFileVariables
+
 
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     def act(self):
@@ -131,8 +133,10 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
     # Overrides --------------------------------------------------
 
-    # @todo #0 Once on ST4, the is_widget approach will not be able to prevent this plugin applying to Output panels.
-    #  Use the new API instead: https://github.com/sublimehq/sublime_text/issues/3167#issuecomment-572685088
+    # @todo #0 Once on ST4, the is_widget approach will not be sufficient because Output
+    #  Panels are no longer considers widgets, so additionally early-out in method act()
+    #  based on the return value of View#element()
+    #  https://github.com/sublimehq/sublime_text/issues/3167#issuecomment-572685088
 
     @classmethod
     def is_applicable(cls, settings):
