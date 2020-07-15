@@ -11,7 +11,7 @@ FILEVARS_RE = r".*-\*-\s*(.+?)\s*-\*-.*"
 
 mode_to_syntax_lut = None
 
-# @todo  Rename this GitHub repo (my fork of the original) from STEmacsModelines to STEmacsFileVariables
+# @todo Rename this GitHub repo (my fork of the original) from STEmacsModelines to STEmacsFileVariables
 
 
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
@@ -133,10 +133,10 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
     # Overrides --------------------------------------------------
 
-    # @todo  Once on ST4, account for is_widget changes
-    # @body  The is_widget approach will no longer be sufficient because Output Panels are no longer considered widgets.
-    # @body  So the method act() should early-return based on the value of View#element()
-    # @body  https://github.com/sublimehq/sublime_text/issues/3167#issuecomment-572685088
+    # @todo Once on ST4, account for is_widget changes
+    # @body The is_widget approach will no longer be sufficient because Output Panels are no longer considered widgets.
+    # @body So the method act() should early-return based on the value of View#element()
+    # @body https://github.com/sublimehq/sublime_text/issues/3167#issuecomment-572685088
 
     @classmethod
     def is_applicable(cls, settings):
