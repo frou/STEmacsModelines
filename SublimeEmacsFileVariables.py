@@ -137,6 +137,7 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     # @body The is_widget approach will no longer be sufficient because Output Panels are no longer considered widgets.
     # @body So the method act() should early-return based on the value of View#element()
     # @body https://github.com/sublimehq/sublime_text/issues/3167#issuecomment-572685088
+    # @body Also should notice view.settings().get("terminus_view") ?
 
     @classmethod
     def is_applicable(cls, settings):
