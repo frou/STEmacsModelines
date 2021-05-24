@@ -20,9 +20,6 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
     @classmethod
     def is_applicable(cls, settings):
-        # We don't want to be active in parts of Sublime's UI other than the actual code editor.
-        # REF: https://forum.sublimetext.com/t/api-how-to-tell-whether-a-view-object-represents-an-unusual-view/36756
-        # NOTE: As of ST4, additional checking needs to be done in an instance method because Output Panels are no longer marked as widgets.
         return not settings.get("is_widget")
 
     def on_load(self):
@@ -37,6 +34,11 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
     # Overrides end --------------------------------------------------------------------
 
     def act(self):
+        # We don't want to be active in parts of Sublime's UI other than the actual code editor.
+        #
+        # NOTE: The "is_widget" check in SublimeEmacsFileVariables::is_applicable is
+        # necessary but no longer sufficient, since as of ST4, Output Panels are no
+        # longer considered widgets.
         if self.view.element() is not None or self.view.settings().get("terminus_view"):
             return
 
