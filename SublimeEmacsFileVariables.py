@@ -1,20 +1,21 @@
 import os
 import re
+from typing import Dict
 
 import sublime
 import sublime_plugin
-
-# Look for the filevars line in the first N lines of the file only.
-FILEVARS_HEAD_LINE_COUNT = 5
-
-FILEVARS_RE = r".*-\*-\s*(.+?)\s*-\*-.*"
-
-mode_to_syntax_lut = None
 
 # @todo Rename this GitHub repo (my fork of the original) from STEmacsModelines to STEmacsFileVariables
 
 
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
+
+    # Look for the filevars line in the first N lines of the file only.
+    FILEVARS_HEAD_LINE_COUNT = 5
+
+    FILEVARS_RE = r".*-\*-\s*(.+?)\s*-\*-.*"
+
+    mode_to_syntax_lut: Dict[str, str] = {}
 
     # Overrides begin ------------------------------------------------------------------
 
@@ -23,27 +24,26 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         return not settings.get("is_widget")
 
     def on_load(self):
-        self.act()
+        self.common_handler()
 
     def on_activated(self):
-        self.act()
+        self.common_handler()
 
     def on_post_save(self):
-        self.act()
+        self.common_handler()
 
     # Overrides end --------------------------------------------------------------------
 
-    def act(self):
-        # We don't want to be active in parts of Sublime's UI other than the actual code editor.
+    def common_handler(self):
+        # We don't want to be active in parts of Sublime's UI other than actual
+        # code-editing views.
         #
-        # NOTE: The "is_widget" check in SublimeEmacsFileVariables::is_applicable is
-        # necessary but no longer sufficient, since as of ST4, Output Panels are no
-        # longer considered widgets.
+        # NOTE: The "is_widget" check in ::is_applicable is necessary but no longer
+        # sufficient, since as of ST4, Output Panels are no longer considered widgets.
         if self.view.element() is not None or self.view.settings().get("terminus_view"):
             return
 
-        global mode_to_syntax_lut
-        if not mode_to_syntax_lut:
+        if not self.mode_to_syntax_lut:
             self.discover_package_syntaxes()
 
         filevars = self.parse_filevars()
@@ -51,9 +51,6 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
             self.process_filevars(filevars)
 
     def discover_package_syntaxes(self):
-        global mode_to_syntax_lut
-        mode_to_syntax_lut = {}
-
         syntax_definition_paths = []
         for p in sublime.find_resources("*.sublime-syntax"):
             syntax_definition_paths.append(p)
@@ -62,7 +59,7 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
         for path in syntax_definition_paths:
             mode = os.path.splitext(os.path.basename(path))[0].lower()
-            mode_to_syntax_lut[mode] = path
+            self.mode_to_syntax_lut[mode] = path
 
         # Load custom mappings from the settings file
         package_settings = sublime.load_settings(
@@ -71,32 +68,30 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
         if package_settings.has("mode_mappings"):
             for mode, syntax in package_settings.get("mode_mappings").items():
-                mode_to_syntax_lut[mode] = mode_to_syntax_lut[syntax.lower()]
+                self.mode_to_syntax_lut[mode] = self.mode_to_syntax_lut[syntax.lower()]
 
         if package_settings.has("user_mode_mappings"):
             for mode, syntax in package_settings.get("user_mode_mappings").items():
-                mode_to_syntax_lut[mode] = mode_to_syntax_lut[syntax.lower()]
+                self.mode_to_syntax_lut[mode] = self.mode_to_syntax_lut[syntax.lower()]
 
-        # print(mode_to_syntax_lut)
+        # print(self.mode_to_syntax_lut)
 
     def parse_filevars(self):
         view = self.view
 
         # Grab lines from beginning of view
-        region_end = view.text_point(FILEVARS_HEAD_LINE_COUNT, 0)
+        region_end = view.text_point(self.FILEVARS_HEAD_LINE_COUNT, 0)
         region = sublime.Region(0, region_end)
         lines = view.lines(region)
 
         # Look for filevars
         for line in lines:
-            m = re.match(FILEVARS_RE, view.substr(line))
+            m = re.match(self.FILEVARS_RE, view.substr(line))
             if m:
                 return m.group(1)
         return None
 
-    def process_filevars(self, filevars):
-        global mode_to_syntax_lut
-
+    def process_filevars(self, filevars):  # noqa: C901
         for component in filevars.lower().split(";"):
             key_value_match = re.match(
                 r"\s*(st-|sublime-text-|sublime-|sublimetext-)?(.+):\s*(.+)\s*",
@@ -134,13 +129,11 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
                 self.set_view_setting("translate_tabs_to_spaces", not value)
             elif key == "mode":
-                if value in mode_to_syntax_lut:
-                    self.set_view_setting("syntax", mode_to_syntax_lut[value])
+                if value in self.mode_to_syntax_lut:
+                    self.set_view_setting("syntax", self.mode_to_syntax_lut[value])
                 else:
                     sublime.status_message(
-                        '{0}: {1} "{2}" does not match any known syntax'.format(
-                            self.__class__.__name__, key, value
-                        )
+                        f"[{self.__class__.__name__}] {key} {value!r} does not match any known syntax"
                     )
             elif key == "tab-width":
                 self.set_view_setting("tab_size", int(value))
