@@ -69,23 +69,32 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         # print(syntax_definition_paths)
 
         for path in syntax_definition_paths:
-            mode_name = Path(path).stem.lower()
-            self.mode_to_syntax_lut[mode_name] = path
+            self.register_mode(Path(path).stem, path)
         # print(self.mode_to_syntax_lut)
 
         mode_mappings: Dict[str, str] = package_settings.get("mode_mappings", {})  # pyright: ignore
         user_mode_mappings: Dict[str, str] = package_settings.get(
             "user_mode_mappings", {}
         )  # pyright: ignore
-        for from_, to in itertools.chain(
+        for from_mode, to_mode in itertools.chain(
             mode_mappings.items(), user_mode_mappings.items()
         ):
-            from_mode_name = from_.lower()
-            to_mode_name = to.lower()
-            self.mode_to_syntax_lut[from_mode_name] = self.mode_to_syntax_lut[
-                to_mode_name
-            ]
+            self.register_mode(
+                from_mode,
+                # @todo Handle this lookup raising
+                self.mode_to_syntax_lut[to_mode.lower()],
+            )
         # print(self.mode_to_syntax_lut)
+
+    def register_mode(self, mode_name: str, syntax_path: str):
+        mode_name_lower = mode_name.lower()
+
+        if existing_syntax_path := self.mode_to_syntax_lut.get(mode_name_lower):
+            print(  # noqa: T201
+                f"[{self.__class__.__name__}] `mode: {mode_name}` will give {syntax_path!r} precedence over {existing_syntax_path!r}"
+            )
+
+        self.mode_to_syntax_lut[mode_name_lower] = syntax_path
 
     def parse_filevars(self):
         view = self.view
