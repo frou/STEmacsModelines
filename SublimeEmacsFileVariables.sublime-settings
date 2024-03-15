@@ -1,9 +1,17 @@
 {
-  // Built-in mode mappings
+  // Built-in mode-name → mode-name mappings
   "mode_mappings": {
   },
 
-  // User-added mode mappings
+  // User-added mode-name → mode-name mappings
   "user_mode_mappings": {
-  }
+  },
+
+  // When scanning packages to find all Syntax Definitions, ignore these ones.
+  "syntax_discovery_blocklist": [
+    // LSP-pyright (for a purpose relating to Hover popups) vendors a copy of
+    // the stock Python.sublime-syntax file. We never want that to take
+    // precedence over the actual stock file for `mode: Python`.
+    "Packages/LSP-pyright/syntaxes/Python.sublime-syntax"
+  ]
 }

@@ -1,6 +1,7 @@
-import os
+import itertools
 import re
-from typing import Dict
+from pathlib import Path
+from typing import ClassVar, Dict, Set
 
 import sublime
 import sublime_plugin
@@ -9,13 +10,12 @@ import sublime_plugin
 
 
 class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
-
     # Look for the filevars line in the first N lines of the file only.
     FILEVARS_HEAD_LINE_COUNT = 5
 
     FILEVARS_RE = r".*-\*-\s*(.+?)\s*-\*-.*"
 
-    mode_to_syntax_lut: Dict[str, str] = {}
+    mode_to_syntax_lut: ClassVar[Dict[str, str]] = {}
 
     # Overrides begin ------------------------------------------------------------------
 
@@ -51,29 +51,40 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
             self.process_filevars(filevars)
 
     def discover_package_syntaxes(self):
-        syntax_definition_paths = []
-        for p in sublime.find_resources("*.sublime-syntax"):
-            syntax_definition_paths.append(p)
-        for p in sublime.find_resources("*.tmLanguage"):
-            syntax_definition_paths.append(p)
-
-        for path in syntax_definition_paths:
-            mode = os.path.splitext(os.path.basename(path))[0].lower()
-            self.mode_to_syntax_lut[mode] = path
-
-        # Load custom mappings from the settings file
         package_settings = sublime.load_settings(
             "SublimeEmacsFileVariables.sublime-settings"
         )
 
-        if package_settings.has("mode_mappings"):
-            for mode, syntax in package_settings.get("mode_mappings").items():
-                self.mode_to_syntax_lut[mode] = self.mode_to_syntax_lut[syntax.lower()]
+        syntax_discovery_blocklist: Set[str] = set(
+            package_settings.get("syntax_discovery_blocklist", [])  # pyright: ignore
+        )
+        syntax_definition_paths = [
+            p
+            for p in itertools.chain(
+                sublime.find_resources("*.tmLanguage"),
+                sublime.find_resources("*.sublime-syntax"),
+            )
+            if p not in syntax_discovery_blocklist
+        ]
+        # print(syntax_definition_paths)
 
-        if package_settings.has("user_mode_mappings"):
-            for mode, syntax in package_settings.get("user_mode_mappings").items():
-                self.mode_to_syntax_lut[mode] = self.mode_to_syntax_lut[syntax.lower()]
+        for path in syntax_definition_paths:
+            mode_name = Path(path).stem.lower()
+            self.mode_to_syntax_lut[mode_name] = path
+        # print(self.mode_to_syntax_lut)
 
+        mode_mappings: Dict[str, str] = package_settings.get("mode_mappings", {})  # pyright: ignore
+        user_mode_mappings: Dict[str, str] = package_settings.get(
+            "user_mode_mappings", {}
+        )  # pyright: ignore
+        for from_, to in itertools.chain(
+            mode_mappings.items(), user_mode_mappings.items()
+        ):
+            from_mode_name = from_.lower()
+            to_mode_name = to.lower()
+            self.mode_to_syntax_lut[from_mode_name] = self.mode_to_syntax_lut[
+                to_mode_name
+            ]
         # print(self.mode_to_syntax_lut)
 
     def parse_filevars(self):
