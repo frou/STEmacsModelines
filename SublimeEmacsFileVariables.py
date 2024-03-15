@@ -1,7 +1,7 @@
 import itertools
 import re
 from pathlib import Path
-from typing import ClassVar, Dict, Set
+from typing import ClassVar, Dict, Optional, Set
 
 import sublime
 import sublime_plugin
@@ -79,22 +79,23 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         for from_mode, to_mode in itertools.chain(
             mode_mappings.items(), user_mode_mappings.items()
         ):
-            self.register_mode(
-                from_mode,
-                # @todo Handle this lookup raising
-                self.mode_to_syntax_lut[to_mode.lower()],
-            )
+            if syntax_path := self.lookup_mode(to_mode):
+                self.register_mode(from_mode, syntax_path)
+            else:
+                self.log(
+                    f"Can't map from mode {from_mode!r} to {to_mode!r} because the later is unrecognised"
+                )
         # print(self.mode_to_syntax_lut)
 
     def register_mode(self, mode_name: str, syntax_path: str):
-        mode_name_lower = mode_name.lower()
-
-        if existing_syntax_path := self.mode_to_syntax_lut.get(mode_name_lower):
+        if existing_syntax_path := self.lookup_mode(mode_name):
             self.log(
-                f"`mode: {mode_name}` will give {syntax_path!r} precedence over {existing_syntax_path!r}"
+                f"Mode {mode_name!r} will give {syntax_path!r} precedence over {existing_syntax_path!r}"
             )
+        self.mode_to_syntax_lut[mode_name.lower()] = syntax_path
 
-        self.mode_to_syntax_lut[mode_name_lower] = syntax_path
+    def lookup_mode(self, mode_name: str) -> Optional[str]:
+        return self.mode_to_syntax_lut.get(mode_name.lower())
 
     def log(self, msg, status_bar=False):
         line = f"[{self.__class__.__name__}] {msg}"
@@ -155,11 +156,11 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
                 self.set_view_setting("translate_tabs_to_spaces", not value)
             elif key == "mode":
-                try:
-                    self.set_view_setting("syntax", self.mode_to_syntax_lut[value])
-                except KeyError:
+                if syntax_path := self.lookup_mode(value):
+                    self.set_view_setting("syntax", syntax_path)
+                else:
                     self.log(
-                        f"{key} {value!r} does not match any known syntax",
+                        f"Mode {value!r} does not map to any known syntax definition",
                         status_bar=True,
                     )
             elif key == "tab-width":
