@@ -154,5 +154,7 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         # print("%s: setting view setting '%s' to '%s'" % (self.__class__.__name__, key, value))
         if key == "line_endings":
             view.set_line_endings(value)
+        elif key == "syntax":
+            view.assign_syntax(value)
         else:
             view.settings().set(key, value)
