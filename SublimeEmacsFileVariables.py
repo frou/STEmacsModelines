@@ -90,11 +90,17 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         mode_name_lower = mode_name.lower()
 
         if existing_syntax_path := self.mode_to_syntax_lut.get(mode_name_lower):
-            print(  # noqa: T201
-                f"[{self.__class__.__name__}] `mode: {mode_name}` will give {syntax_path!r} precedence over {existing_syntax_path!r}"
+            self.log(
+                f"`mode: {mode_name}` will give {syntax_path!r} precedence over {existing_syntax_path!r}"
             )
 
         self.mode_to_syntax_lut[mode_name_lower] = syntax_path
+
+    def log(self, msg, status_bar=False):
+        line = f"[{self.__class__.__name__}] {msg}"
+        print(line)  # noqa: T201
+        if status_bar:
+            sublime.status_message(line)
 
     def parse_filevars(self):
         view = self.view
@@ -149,11 +155,12 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
 
                 self.set_view_setting("translate_tabs_to_spaces", not value)
             elif key == "mode":
-                if value in self.mode_to_syntax_lut:
+                try:
                     self.set_view_setting("syntax", self.mode_to_syntax_lut[value])
-                else:
-                    sublime.status_message(
-                        f"[{self.__class__.__name__}] {key} {value!r} does not match any known syntax"
+                except KeyError:
+                    self.log(
+                        f"{key} {value!r} does not match any known syntax",
+                        status_bar=True,
                     )
             elif key == "tab-width":
                 self.set_view_setting("tab_size", int(value))
