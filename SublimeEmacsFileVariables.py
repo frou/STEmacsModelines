@@ -137,7 +137,7 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
                 elif value.lower() == "false":
                     value = False
 
-                self.set_view_setting(key, value)
+                self.view.settings().set(key, value)
             elif key == "coding":
                 # http://www.gnu.org/software/emacs/manual/html_node/emacs/Coding-Systems.html
                 # http://www.gnu.org/software/emacs/manual/html_node/emacs/Specify-Coding.html
@@ -149,29 +149,19 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
                     value = "windows"
                 if value == "mac":
                     value = "CR"
-                self.set_view_setting("line_endings", value)
+                self.view.set_line_endings(value)
             elif key == "indent-tabs-mode":
                 # Convert string representations of Emacs Lisp values to proper Python booleans.
                 value = value.lower() != "nil" and value.lower() != "()"
 
-                self.set_view_setting("translate_tabs_to_spaces", not value)
+                self.view.settings().set("translate_tabs_to_spaces", not value)
             elif key == "mode":
                 if syntax_path := self.lookup_mode(value):
-                    self.set_view_setting("syntax", syntax_path)
+                    self.view.assign_syntax(syntax_path)
                 else:
                     self.log(
                         f"Mode {value!r} does not map to any known syntax definition",
                         status_bar=True,
                     )
             elif key == "tab-width":
-                self.set_view_setting("tab_size", int(value))
-
-    def set_view_setting(self, key, value):
-        view = self.view
-        # print("%s: setting view setting '%s' to '%s'" % (self.__class__.__name__, key, value))
-        if key == "line_endings":
-            view.set_line_endings(value)
-        elif key == "syntax":
-            view.assign_syntax(value)
-        else:
-            view.settings().set(key, value)
+                self.view.settings().set("tab_size", int(value))
