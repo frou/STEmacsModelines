@@ -24,17 +24,6 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         return not settings.get("is_widget")
 
     def on_load(self):
-        self.common_handler()
-
-    def on_activated(self):
-        self.common_handler()
-
-    def on_post_save(self):
-        self.common_handler()
-
-    # Overrides end --------------------------------------------------------------------
-
-    def common_handler(self):
         # We don't want to be active in parts of Sublime's UI other than actual
         # code-editing views.
         #
@@ -49,6 +38,14 @@ class SublimeEmacsFileVariables(sublime_plugin.ViewEventListener):
         filevars = self.parse_filevars()
         if filevars:
             self.process_filevars(filevars)
+
+    def on_activated(self):
+        self.on_load()
+
+    def on_post_save(self):
+        self.on_load()
+
+    # Overrides end --------------------------------------------------------------------
 
     def discover_package_syntaxes(self):
         package_settings = sublime.load_settings(
